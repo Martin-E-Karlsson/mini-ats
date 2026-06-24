@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mini-ATS · Jobs</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header class="topbar">
+    <nav>
+        <a th:href="@{/jobs}">Jobs</a>
+        <a th:href="@{/board}">Board</a>
+    </nav>
+    <div class="right">
+        <span sec:authentication="name">user</span>
+        <form th:action="@{/user/logout}" method="post">
+            <button class="btn small secondary" type="submit">Sign out</button>
+        </form>
+    </div>
+</header>
+
+<main class="container">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h2 style="margin:0;">Jobs</h2>
+        <a class="btn" th:href="@{/jobs/new}">+ New job</a>
+    </div>
+
+    <div class="card" th:if="${jobs.isEmpty()}">
+        <p class="muted">No jobs yet. Create your first one to start adding candidates.</p>
+    </div>
+
+    <div class="card" th:unless="${jobs.isEmpty()}">
+        <table>
+            <thead>
+            <tr><th>Title</th><th>Location</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="job : ${jobs}">
+                <td th:text="${job.title}">Title</td>
+                <td th:text="${job.location} ?: '—'">Location</td>
+                <td>
+                    <span class="pill" th:text="${job.open} ? 'Open' : 'Closed'">Open</span>
+                </td>
+                <td class="actions">
+                    <a class="btn small secondary" th:href="@{/jobs/{id}/edit(id=${job.id})}">Edit</a>
+                    <form th:action="@{/jobs/{id}/delete(id=${job.id})}" method="post"
+                          onsubmit="return confirm('Delete this job?');">
+                        <button class="btn small danger" type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

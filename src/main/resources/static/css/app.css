@@ -1,0 +1,74 @@
+:root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --line: #e5e7eb;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --primary: #2563eb;
+    --danger: #ef4444;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+}
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .9rem 1.5rem; background: var(--card); border-bottom: 1px solid var(--line);
+}
+.topbar nav a { margin-right: 1rem; font-weight: 600; }
+.topbar .right { display: flex; align-items: center; gap: 1rem; }
+.pill {
+    background: #e0e7ff; color: #3730a3; padding: .2rem .6rem;
+    border-radius: 999px; font-size: .8rem; font-weight: 600;
+}
+
+.container { max-width: 960px; margin: 1.5rem auto; padding: 0 1.5rem; }
+
+.card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem;
+}
+
+.btn {
+    display: inline-block; padding: .5rem .9rem; border: 0; border-radius: 7px;
+    background: var(--primary); color: #fff; font-weight: 600; cursor: pointer; font-size: .9rem;
+}
+.btn.secondary { background: #e5e7eb; color: #111827; }
+.btn.danger { background: var(--danger); }
+.btn.small { padding: .3rem .6rem; font-size: .8rem; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: .6rem .5rem; border-bottom: 1px solid var(--line); }
+th { font-size: .75rem; text-transform: uppercase; color: var(--muted); letter-spacing: .03em; }
+
+.form-row { margin-bottom: 1rem; }
+.form-row label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: .25rem; }
+.form-row input, .form-row textarea, .form-row select {
+    width: 100%; padding: .55rem; border: 1px solid #cbd5e1; border-radius: 7px; font: inherit;
+}
+.field-error { color: var(--danger); font-size: .8rem; margin-top: .25rem; }
+.muted { color: var(--muted); }
+.actions { display: flex; gap: .5rem; }
+
+/* ---- Kanban board (used in step 8b) ---- */
+.board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 1fr);
+         gap: .9rem; overflow-x: auto; padding-bottom: 1rem; }
+.column { background: #eef1f5; border-radius: 10px; padding: .6rem; min-height: 120px; }
+.column h3 { margin: .2rem .3rem .7rem; font-size: .8rem; text-transform: uppercase;
+             color: var(--muted); letter-spacing: .03em; }
+.kcard {
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+    padding: .55rem .65rem; margin-bottom: .5rem; cursor: grab; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+.kcard .name { font-weight: 600; font-size: .9rem; }
+.kcard .meta { font-size: .75rem; color: var(--muted); margin-top: .2rem; }
+.filters { display: flex; gap: .75rem; align-items: end; flex-wrap: wrap; margin-bottom: 1rem; }

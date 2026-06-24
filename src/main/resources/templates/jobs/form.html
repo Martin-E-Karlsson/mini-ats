@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mini-ATS · Job</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header class="topbar">
+    <nav>
+        <a th:href="@{/jobs}">Jobs</a>
+        <a th:href="@{/board}">Board</a>
+    </nav>
+</header>
+
+<main class="container">
+    <h2 th:text="${job.id} != null ? 'Edit job' : 'New job'">New job</h2>
+
+    <div class="card">
+        <!-- New jobs POST to /jobs; existing jobs POST to /jobs/{id} -->
+        <form th:action="${job.id} != null ? @{/jobs/{id}(id=${job.id})} : @{/jobs}"
+              th:object="${job}" method="post">
+
+            <div class="form-row">
+                <label for="title">Title *</label>
+                <input id="title" type="text" th:field="*{title}" required>
+                <div class="field-error" th:if="${#fields.hasErrors('title')}"
+                     th:errors="*{title}">Title error</div>
+            </div>
+
+            <div class="form-row">
+                <label for="location">Location</label>
+                <input id="location" type="text" th:field="*{location}">
+            </div>
+
+            <div class="form-row">
+                <label for="description">Description</label>
+                <textarea id="description" rows="4" th:field="*{description}"></textarea>
+            </div>
+
+            <div class="form-row">
+                <label><input type="checkbox" th:field="*{open}"> Open for applications</label>
+            </div>
+
+            <div class="actions">
+                <button class="btn" type="submit">Save</button>
+                <a class="btn secondary" th:href="@{/jobs}">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>
