@@ -29,7 +29,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -61,7 +60,7 @@ class JobControllerTest {
     void anonymous_isRedirectedToLogin() throws Exception {
         mvc.perform(get("/jobs"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/user/login"));
+                .andExpect(redirectedUrl("/user/login"));
     }
 
     @Test
