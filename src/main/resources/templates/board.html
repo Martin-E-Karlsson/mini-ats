@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mini-ATS · Board</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <!-- CSRF token for the drag-and-drop fetch call -->
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+</head>
+<body>
+<header class="topbar">
+    <nav>
+        <a th:href="@{/jobs}">Jobs</a>
+        <a th:href="@{/board}">Board</a>
+    </nav>
+    <div class="right">
+        <span sec:authentication="name">user</span>
+        <form th:action="@{/user/logout}" method="post">
+            <button class="btn small secondary" type="submit">Sign out</button>
+        </form>
+    </div>
+</header>
+
+<main class="container" style="max-width: 1200px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h2 style="margin:0;">Candidate board</h2>
+        <a class="btn" th:href="@{/candidates/new}">+ New candidate</a>
+    </div>
+
+    <!-- Filters: by job and by candidate name -->
+    <form class="filters" method="get" th:action="@{/board}">
+        <div>
+            <label for="jobId">Job</label>
+            <select id="jobId" name="jobId">
+                <option value="">All jobs</option>
+                <option th:each="j : ${jobs}" th:value="${j.id}" th:text="${j.title}"
+                        th:selected="${selectedJobId != null and selectedJobId.toString() == j.id.toString()}">Job</option>
+            </select>
+        </div>
+        <div>
+            <label for="name">Candidate name</label>
+            <input id="name" type="text" name="name" th:value="${nameFilter}" placeholder="Search…">
+        </div>
+        <button class="btn" type="submit">Filter</button>
+        <a class="btn secondary" th:href="@{/board}">Clear</a>
+    </form>
+
+    <div class="board">
+        <div class="column" th:each="entry : ${columns}">
+            <h3 th:text="${entry.key}">stage</h3>
+            <div class="cards" th:data-stage="${entry.key}" data-sortable>
+                <div class="kcard" th:each="c : ${entry.value}" th:data-id="${c.id}">
+                    <div class="name" th:text="${c.fullName}">Candidate</div>
+                    <div class="meta">
+                        <span th:if="${c.jobId != null}" th:text="${jobTitles.get(c.jobId)}">Job</span>
+                    </div>
+                    <div class="meta" style="margin-top:.35rem; display:flex; gap:.5rem;">
+                        <a th:if="${c.linkedinUrl != null and !c.linkedinUrl.isBlank()}"
+                           th:href="${c.linkedinUrl}" target="_blank" rel="noopener">LinkedIn</a>
+                        <a th:href="@{/candidates/{id}/edit(id=${c.id})}">Edit</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script th:inline="javascript">
+    (function () {
+        const token = document.querySelector('meta[name="_csrf"]').content;
+        const header = document.querySelector('meta[name="_csrf_header"]').content;
+
+        document.querySelectorAll('[data-sortable]').forEach(function (col) {
+            new Sortable(col, {
+                group: 'board',
+                animation: 150,
+                onEnd: function (evt) {
+                    const id = evt.item.dataset.id;
+                    const stage = evt.to.dataset.stage;       // target column's stage
+                    const position = evt.newIndex;            // ordering within that column
+
+                    const body = new URLSearchParams();
+                    body.append('stage', stage);
+                    body.append('position', position);
+
+                    fetch('/candidates/' + id + '/move', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            [header]: token
+                        },
+                        body: body
+                    }).then(function (r) {
+                        if (!r.ok) {
+                            alert('Could not move candidate — reloading.');
+                            location.reload();
+                        }
+                    });
+                }
+            });
+        });
+    })();
+</script>
+</body>
+</html>
