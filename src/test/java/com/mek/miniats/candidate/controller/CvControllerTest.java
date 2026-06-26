@@ -1,14 +1,15 @@
-package com.mek.miniats.screening;
+package com.mek.miniats.candidate.controller;
 
 import com.mek.miniats.auth.SupabasePrincipal;
 import com.mek.miniats.candidate.entity.Candidate;
 import com.mek.miniats.candidate.service.CandidateService;
 import com.mek.miniats.config.SecurityConfig;
-import com.mek.miniats.job.service.JobService;
+import com.mek.miniats.storage.CvStorageService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,15 +27,14 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-@WebMvcTest(CvScreeningController.class)
+@WebMvcTest(CvController.class)
 @Import(SecurityConfig.class)
-class CvScreeningControllerTest {
+class CvControllerTest {
 
     @Autowired
     MockMvc mvc;
@@ -43,16 +43,7 @@ class CvScreeningControllerTest {
     CandidateService candidateService;
 
     @MockitoBean
-    JobService jobService;
-
-    @MockitoBean
-    CvScreeningService screeningService;
-
-    @MockitoBean
-    com.mek.miniats.storage.CvStorageService cvStorageService;
-
-    @MockitoBean
-    com.mek.miniats.storage.CvTextExtractor cvTextExtractor;
+    CvStorageService cvStorage;
 
     @MockitoBean
     AuthenticationProvider supabaseAuthenticationProvider;
@@ -71,48 +62,54 @@ class CvScreeningControllerTest {
         c.setId(id);
         c.setOwnerId(userId);
         c.setFullName("Ada Lovelace");
-        c.setJobId(null); // no job => no jobService lookup needed
         return c;
     }
 
     @Test
-    void anonymous_isRedirectedToLogin() throws Exception {
-        mvc.perform(get("/candidates/{id}/screen", UUID.randomUUID()))
+    void upload_storesFileAttachesAndRedirects() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(candidateService.get(eq(id), eq(userId), eq(false))).thenReturn(candidate(id));
+        when(cvStorage.store(eq(id), eq("resume.pdf"), any(), eq("application/pdf"))).thenReturn("key123");
+
+        var file = new MockMultipartFile("file", "resume.pdf", "application/pdf", "pdf-bytes".getBytes());
+
+        mvc.perform(multipart("/candidates/{id}/cv", id).file(file).with(signedIn()).with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/user/login"));
+                .andExpect(redirectedUrl("/candidates/" + id + "/edit"));
+
+        verify(cvStorage).store(eq(id), eq("resume.pdf"), any(), eq("application/pdf"));
+        verify(candidateService).attachCv(eq(id), eq("key123"), eq("resume.pdf"), eq(userId), eq(false));
     }
 
     @Test
-    void getForm_rendersScreeningPage() throws Exception {
+    void download_returnsFileBytesAsAttachment() throws Exception {
         UUID id = UUID.randomUUID();
-        when(candidateService.get(eq(id), eq(userId), eq(false))).thenReturn(candidate(id));
+        Candidate c = candidate(id);
+        c.setCvPath("key123");
+        c.setCvFilename("resume.pdf");
+        when(candidateService.get(eq(id), eq(userId), eq(false))).thenReturn(c);
+        when(cvStorage.download("key123")).thenReturn("pdf-bytes".getBytes());
 
-        mvc.perform(get("/candidates/{id}/screen", id).with(signedIn()))
+        mvc.perform(get("/candidates/{id}/cv", id).with(signedIn()))
                 .andExpect(status().isOk())
-                .andExpect(view().name("screening/screen"))
-                .andExpect(model().attributeExists("candidate", "jobTitle"));
+                .andExpect(header().string("Content-Disposition",
+                        org.hamcrest.Matchers.containsString("resume.pdf")));
     }
 
     @Test
-    void post_runsScreeningAndShowsAssessment() throws Exception {
+    void download_whenNoCv_returnsNotFound() throws Exception {
         UUID id = UUID.randomUUID();
-        when(candidateService.get(eq(id), eq(userId), eq(false))).thenReturn(candidate(id));
-        when(screeningService.screen(eq("Ada Lovelace"), any(), any(), eq("CV text here")))
-                .thenReturn("Fit score: 8/10");
+        when(candidateService.get(eq(id), eq(userId), eq(false))).thenReturn(candidate(id)); // cvPath null
 
-        mvc.perform(post("/candidates/{id}/screen", id).with(signedIn()).with(csrf())
-                        .param("cvText", "CV text here"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("screening/screen"))
-                .andExpect(model().attribute("assessment", "Fit score: 8/10"));
-
-        verify(screeningService).screen(eq("Ada Lovelace"), any(), any(), eq("CV text here"));
+        mvc.perform(get("/candidates/{id}/cv", id).with(signedIn()))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void post_withoutCsrf_isForbidden() throws Exception {
-        mvc.perform(post("/candidates/{id}/screen", UUID.randomUUID()).with(signedIn())
-                        .param("cvText", "CV text here"))
+    void upload_withoutCsrf_isForbidden() throws Exception {
+        UUID id = UUID.randomUUID();
+        var file = new MockMultipartFile("file", "resume.pdf", "application/pdf", "x".getBytes());
+        mvc.perform(multipart("/candidates/{id}/cv", id).file(file).with(signedIn()))
                 .andExpect(status().isForbidden());
     }
 }

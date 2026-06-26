@@ -55,6 +55,14 @@ public class Candidate {
     @Column(nullable = false)
     private double position = 0;
 
+    /** Storage object key for the uploaded CV (null if none). */
+    @Column(name = "cv_path", columnDefinition = "text")
+    private String cvPath;
+
+    /** Original filename of the uploaded CV, for display/download. */
+    @Column(name = "cv_filename", columnDefinition = "text")
+    private String cvFilename;
+
     @Column(name = "created_at", columnDefinition = "timestamptz",
             insertable = false, updatable = false)
     private OffsetDateTime createdAt;

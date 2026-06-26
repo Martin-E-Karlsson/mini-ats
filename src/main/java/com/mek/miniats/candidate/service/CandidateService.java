@@ -63,6 +63,14 @@ public class CandidateService {
         return candidates.save(c);
     }
 
+    /** Attach an uploaded CV (storage key + original filename) to a candidate. */
+    public Candidate attachCv(UUID id, String cvKey, String filename, UUID userId, boolean isAdmin) {
+        Candidate c = get(id, userId, isAdmin);
+        c.setCvPath(cvKey);
+        c.setCvFilename(filename);
+        return candidates.save(c);
+    }
+
     /** Kanban drag-and-drop: move a candidate to a new column and ordering slot. */
     public Candidate moveToStage(UUID id, CandidateStage stage, double position,
                                  UUID userId, boolean isAdmin) {

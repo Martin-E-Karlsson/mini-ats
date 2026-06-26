@@ -177,4 +177,27 @@ class CandidateServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class);
         verify(candidates, never()).delete(any());
     }
+
+    // ── attach CV ─────────────────────────────────────────────────────────
+
+    @Test
+    void attachCv_ownCandidate_setsPathAndFilename() {
+        Candidate c = candidate(alice, jobA, "Ada");
+        when(candidates.findById(c.getId())).thenReturn(Optional.of(c));
+        when(candidates.save(any(Candidate.class))).thenAnswer(i -> i.getArgument(0));
+
+        Candidate result = service.attachCv(c.getId(), "key123", "ada.pdf", alice, false);
+
+        assertThat(result.getCvPath()).isEqualTo("key123");
+        assertThat(result.getCvFilename()).isEqualTo("ada.pdf");
+    }
+
+    @Test
+    void attachCv_othersCandidate_throwsAndDoesNotSave() {
+        Candidate c = candidate(bob, jobA, "Bob's Candidate");
+        when(candidates.findById(c.getId())).thenReturn(Optional.of(c));
+        assertThatThrownBy(() -> service.attachCv(c.getId(), "key", "cv.pdf", alice, false))
+                .isInstanceOf(ResourceNotFoundException.class);
+        verify(candidates, never()).save(any());
+    }
 }

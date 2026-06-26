@@ -6,6 +6,8 @@ import com.mek.miniats.candidate.service.CandidateService;
 import com.mek.miniats.common.CurrentUser;
 import com.mek.miniats.job.entity.Job;
 import com.mek.miniats.job.service.JobService;
+import com.mek.miniats.storage.CvStorageService;
+import com.mek.miniats.storage.CvTextExtractor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -25,12 +27,17 @@ public class CvScreeningController {
     private final CandidateService candidateService;
     private final JobService jobService;
     private final CvScreeningService screeningService;
+    private final CvStorageService cvStorage;
+    private final CvTextExtractor cvTextExtractor;
 
     public CvScreeningController(CandidateService candidateService, JobService jobService,
-                                CvScreeningService screeningService) {
+                                CvScreeningService screeningService, CvStorageService cvStorage,
+                                CvTextExtractor cvTextExtractor) {
         this.candidateService = candidateService;
         this.jobService = jobService;
         this.screeningService = screeningService;
+        this.cvStorage = cvStorage;
+        this.cvTextExtractor = cvTextExtractor;
     }
 
     @GetMapping
@@ -40,6 +47,16 @@ public class CvScreeningController {
         Candidate candidate = candidateService.get(id, me.id(), admin);
         model.addAttribute("candidate", candidate);
         model.addAttribute("jobTitle", jobTitleFor(candidate, me.id(), admin));
+
+        // If a CV is on file, pre-fill the textarea with its extracted text.
+        if (candidate.getCvPath() != null) {
+            try {
+                byte[] bytes = cvStorage.download(candidate.getCvPath());
+                model.addAttribute("cvText", cvTextExtractor.extract(bytes, candidate.getCvFilename()));
+            } catch (Exception e) {
+                // Extraction/download failed — leave the box empty so the user can paste.
+            }
+        }
         return "screening/screen";
     }
 

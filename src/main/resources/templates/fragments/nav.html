@@ -9,7 +9,7 @@
         <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/users}">Users</a>
     </nav>
     <div class="right">
-        <a th:href="@{/profile}" sec:authentication="name">user</a>
+        <a th:href="@{/profile}">Profile</a>
         <form th:action="@{/user/logout}" method="post" style="margin:0;">
             <button class="btn small secondary" type="submit">Sign out</button>
         </form>
