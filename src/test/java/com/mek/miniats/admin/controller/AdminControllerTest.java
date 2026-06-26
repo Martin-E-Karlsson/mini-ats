@@ -1,10 +1,10 @@
 package com.mek.miniats.admin.controller;
 
-import com.mek.miniats.admin.AccountCreationException;
 import com.mek.miniats.admin.service.AdminUserService;
 import com.mek.miniats.auth.SupabasePrincipal;
 import com.mek.miniats.config.SecurityConfig;
 import com.mek.miniats.user.UserRole;
+import com.mek.miniats.user.entity.Profile;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -19,9 +19,12 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -39,23 +42,38 @@ class AdminControllerTest {
     MockMvc mvc;
 
     @MockitoBean
-    AdminUserService adminUserService;
+    AdminUserService service;
 
     @MockitoBean
     AuthenticationProvider supabaseAuthenticationProvider;
 
+    private final UUID adminId = UUID.randomUUID();
+
     private RequestPostProcessor signedIn(String role) {
-        var principal = new SupabasePrincipal(UUID.randomUUID(), "u@b.com", "User", "token");
+        var principal = new SupabasePrincipal(adminId, "admin@b.com", "Admin", "token");
         var token = new UsernamePasswordAuthenticationToken(
                 principal, null, List.of(new SimpleGrantedAuthority(role)));
         return authentication(token);
     }
 
+    // ── list ──────────────────────────────────────────────────────────────
+
     @Test
-    void customer_cannotAccessCreateForm() throws Exception {
-        mvc.perform(get("/admin/users/new").with(signedIn("ROLE_CUSTOMER")))
+    void customer_cannotSeeUsersList() throws Exception {
+        mvc.perform(get("/admin/users").with(signedIn("ROLE_CUSTOMER")))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void admin_seesUsersList() throws Exception {
+        when(service.list()).thenReturn(List.of());
+        mvc.perform(get("/admin/users").with(signedIn("ROLE_ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/users"))
+                .andExpect(model().attributeExists("users"));
+    }
+
+    // ── create ────────────────────────────────────────────────────────────
 
     @Test
     void admin_getsCreateForm() throws Exception {
@@ -66,42 +84,75 @@ class AdminControllerTest {
     }
 
     @Test
-    void admin_createsAccount_redirects() throws Exception {
+    void create_matchingPasswords_redirectsToList() throws Exception {
         mvc.perform(post("/admin/users").with(signedIn("ROLE_ADMIN")).with(csrf())
                         .param("email", "new@b.com")
                         .param("password", "secret123")
+                        .param("confirmPassword", "secret123")
                         .param("fullName", "New User")
                         .param("role", "customer"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/users/new?created"));
+                .andExpect(redirectedUrl("/admin/users"));
 
-        verify(adminUserService).createAccount("new@b.com", "secret123", "New User", UserRole.customer);
+        verify(service).createAccount("new@b.com", "secret123", "New User", UserRole.customer);
     }
 
     @Test
-    void duplicateEmail_returnsFormWithError() throws Exception {
-        doThrow(new AccountCreationException("A user with this email already exists.", null))
-                .when(adminUserService).createAccount(eq("dupe@b.com"), eq("secret123"), eq("Dupe"), eq(UserRole.customer));
-
+    void create_mismatchedPasswords_returnsFormWithoutSaving() throws Exception {
         mvc.perform(post("/admin/users").with(signedIn("ROLE_ADMIN")).with(csrf())
-                        .param("email", "dupe@b.com")
+                        .param("email", "new@b.com")
                         .param("password", "secret123")
-                        .param("fullName", "Dupe")
-                        .param("role", "customer"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/create-user"))
-                .andExpect(model().attributeExists("error"));
-    }
-
-    @Test
-    void invalidForm_blankEmail_returnsForm() throws Exception {
-        mvc.perform(post("/admin/users").with(signedIn("ROLE_ADMIN")).with(csrf())
-                        .param("email", "")
-                        .param("password", "secret123")
-                        .param("fullName", "No Email")
+                        .param("confirmPassword", "different")
+                        .param("fullName", "New User")
                         .param("role", "customer"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/create-user"));
+
+        verify(service, never()).createAccount(any(), any(), any(), any());
+    }
+
+    // ── edit / update / delete ────────────────────────────────────────────
+
+    @Test
+    void admin_getsEditForm() throws Exception {
+        UUID otherId = UUID.randomUUID();
+        Profile p = new Profile();
+        p.setId(otherId);
+        p.setEmail("x@b.com");
+        p.setFullName("X");
+        p.setRole(UserRole.customer);
+        when(service.get(otherId)).thenReturn(p);
+
+        mvc.perform(get("/admin/users/{id}/edit", otherId).with(signedIn("ROLE_ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/edit-user"))
+                .andExpect(model().attributeExists("form", "userId", "roles", "editingSelf"));
+    }
+
+    @Test
+    void update_otherUser_redirectsAndSaves() throws Exception {
+        UUID otherId = UUID.randomUUID();
+        mvc.perform(post("/admin/users/{id}", otherId).with(signedIn("ROLE_ADMIN")).with(csrf())
+                        .param("fullName", "New Name")
+                        .param("email", "new@b.com")
+                        .param("role", "admin"))
+                .andExpect(redirectedUrl("/admin/users"));
+
+        verify(service).updateAccount(eq(otherId), eq("new@b.com"), eq("New Name"), eq(UserRole.admin), isNull());
+    }
+
+    @Test
+    void delete_otherUser_callsService() throws Exception {
+        UUID otherId = UUID.randomUUID();
+        mvc.perform(post("/admin/users/{id}/delete", otherId).with(signedIn("ROLE_ADMIN")).with(csrf()))
+                .andExpect(redirectedUrl("/admin/users"));
+        verify(service).deleteAccount(otherId);
+    }
+
+    @Test
+    void delete_self_isIgnored() throws Exception {
+        mvc.perform(post("/admin/users/{id}/delete", adminId).with(signedIn("ROLE_ADMIN")).with(csrf()))
+                .andExpect(redirectedUrl("/admin/users"));
+        verify(service, never()).deleteAccount(any());
     }
 
     @Test
@@ -109,6 +160,7 @@ class AdminControllerTest {
         mvc.perform(post("/admin/users").with(signedIn("ROLE_CUSTOMER")).with(csrf())
                         .param("email", "x@b.com")
                         .param("password", "secret123")
+                        .param("confirmPassword", "secret123")
                         .param("fullName", "X")
                         .param("role", "customer"))
                 .andExpect(status().isForbidden());

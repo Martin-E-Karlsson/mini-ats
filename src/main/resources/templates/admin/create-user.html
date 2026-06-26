@@ -7,13 +7,7 @@
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-<header class="topbar">
-    <nav>
-        <a th:href="@{/jobs}">Jobs</a>
-        <a th:href="@{/board}">Board</a>
-        <a th:href="@{/admin/users/new}">Admin</a>
-    </nav>
-</header>
+<header th:replace="~{fragments/nav :: topbar}"></header>
 
 <main class="container">
     <h2>Create account</h2>
@@ -38,10 +32,17 @@
             </div>
 
             <div class="form-row">
-                <label for="password">Temporary password *</label>
-                <input id="password" type="text" th:field="*{password}" required>
+                <label for="password">Temporary password * (min 8 characters)</label>
+                <input id="password" type="password" th:field="*{password}" required>
                 <div class="field-error" th:if="${#fields.hasErrors('password')}"
                      th:errors="*{password}">Password error</div>
+            </div>
+
+            <div class="form-row">
+                <label for="confirmPassword">Confirm password *</label>
+                <input id="confirmPassword" type="password" th:field="*{confirmPassword}" required>
+                <div class="field-error" th:if="${#fields.hasErrors('confirmPassword')}"
+                     th:errors="*{confirmPassword}">Confirm error</div>
             </div>
 
             <div class="form-row">

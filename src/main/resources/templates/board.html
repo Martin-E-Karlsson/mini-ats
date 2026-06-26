@@ -11,19 +11,7 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
 </head>
 <body>
-<header class="topbar">
-    <nav>
-        <a th:href="@{/jobs}">Jobs</a>
-        <a th:href="@{/board}">Board</a>
-        <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/users/new}">Admin</a>
-    </nav>
-    <div class="right">
-        <span sec:authentication="name">user</span>
-        <form th:action="@{/user/logout}" method="post">
-            <button class="btn small secondary" type="submit">Sign out</button>
-        </form>
-    </div>
-</header>
+<header th:replace="~{fragments/nav :: topbar}"></header>
 
 <main class="container" style="max-width: 1200px;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">

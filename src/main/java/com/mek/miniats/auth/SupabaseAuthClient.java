@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Component
@@ -82,6 +83,37 @@ public class SupabaseAuthClient {
 
         // The on_auth_user_created trigger auto-inserts the matching profiles row.
 
+    }
+
+    /**
+     * Admin-only: update a user's email, full name, and/or password. A blank
+     * password leaves it unchanged. Email is auto-confirmed to avoid lockout.
+     */
+    public void adminUpdateUser(String userId, String email, String newPassword, String fullName) {
+        Map<String, Object> body = new HashMap<>();
+        if (email != null && !email.isBlank()) {
+            body.put("email", email);
+            body.put("email_confirm", true);
+        }
+        if (newPassword != null && !newPassword.isBlank()) {
+            body.put("password", newPassword);
+        }
+        if (fullName != null) {
+            body.put("user_metadata", Map.of("full_name", fullName));
+        }
+        admin.put()
+                .uri("/admin/users/" + userId)
+                .body(body)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    /** Admin-only: delete a user. The profiles row cascades via its FK. */
+    public void adminDeleteUser(String userId) {
+        admin.delete()
+                .uri("/admin/users/" + userId)
+                .retrieve()
+                .toBodilessEntity();
     }
 
 }

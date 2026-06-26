@@ -18,11 +18,8 @@
     </style>
 </head>
 <body>
-<div class="bar">
-    <h1>Mini-ATS</h1>
-    <form th:action="@{/user/logout}" method="post"><button type="submit">Sign out</button></form>
-</div>
-<div class="card">
+<header th:replace="~{fragments/nav :: topbar}"></header>
+<div class="card" style="margin-top:1.5rem;">
     <p>Signed in as <strong th:text="${name}">user@example.com</strong>
         <span class="pill" th:text="${role}">Role</span></p>
     <p>Auth is working end-to-end: Supabase verified your password, and Spring resolved your role.</p>

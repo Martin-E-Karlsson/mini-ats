@@ -7,12 +7,7 @@
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-<header class="topbar">
-    <nav>
-        <a th:href="@{/jobs}">Jobs</a>
-        <a th:href="@{/board}">Board</a>
-    </nav>
-</header>
+<header th:replace="~{fragments/nav :: topbar}"></header>
 
 <main class="container">
     <h2 th:text="${candidate.id} != null ? 'Edit candidate' : 'New candidate'">New candidate</h2>
