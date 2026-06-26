@@ -62,6 +62,7 @@
                         <a th:if="${c.linkedinUrl != null and !c.linkedinUrl.isBlank()}"
                            th:href="${c.linkedinUrl}" target="_blank" rel="noopener">LinkedIn</a>
                         <a th:href="@{/candidates/{id}/edit(id=${c.id})}">Edit</a>
+                        <a th:href="@{/candidates/{id}/screen(id=${c.id})}">Screen</a>
                     </div>
                 </div>
             </div>

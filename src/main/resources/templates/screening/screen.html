@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mini-ATS · Screen CV</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header class="topbar">
+    <nav>
+        <a th:href="@{/jobs}">Jobs</a>
+        <a th:href="@{/board}">Board</a>
+        <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/users/new}">Admin</a>
+    </nav>
+    <div class="right">
+        <span sec:authentication="name">user</span>
+        <form th:action="@{/user/logout}" method="post">
+            <button class="btn small secondary" type="submit">Sign out</button>
+        </form>
+    </div>
+</header>
+
+<main class="container">
+    <h2>Screen CV with AI</h2>
+    <p class="muted">
+        Candidate: <strong th:text="${candidate.fullName}">Name</strong>
+        · Role: <span th:text="${jobTitle}">Role</span>
+    </p>
+
+    <div class="card">
+        <form th:action="@{/candidates/{id}/screen(id=${candidate.id})}" method="post">
+            <div class="form-row">
+                <label for="cvText">Paste the candidate's CV text</label>
+                <textarea id="cvText" name="cvText" rows="10"
+                          th:text="${cvText}" placeholder="Paste CV content here…"></textarea>
+                <div class="field-error" th:if="${error}" th:text="${error}">error</div>
+            </div>
+            <div class="actions">
+                <button class="btn" type="submit">Run AI screening</button>
+                <a class="btn secondary" th:href="@{/board}">Back to board</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card" th:if="${assessment}">
+        <h3 style="margin-top:0;">Assessment</h3>
+        <pre style="white-space:pre-wrap; font:inherit; margin:0;" th:text="${assessment}">result</pre>
+    </div>
+</main>
+</body>
+</html>
