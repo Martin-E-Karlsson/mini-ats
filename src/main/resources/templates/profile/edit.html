@@ -13,7 +13,7 @@
     <h2>My profile</h2>
 
     <div class="card">
-        <p th:if="${param.updated}" style="color:#15803d;">Profile updated.</p>
+        <p th:if="${param.updated}" class="ok">Profile updated.</p>
         <p th:if="${error}" class="field-error" th:text="${error}">error</p>
 
         <p class="muted">Role: <span class="pill" th:text="${role}">role</span></p>

@@ -200,4 +200,62 @@ class CandidateServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class);
         verify(candidates, never()).save(any());
     }
+
+    // ── advance / retreat stage (board buttons) ───────────────────────────
+
+    @Test
+    void advanceStage_movesToNextStage() {
+        Candidate c = candidate(alice, jobA, "Ada");
+        c.setStage(CandidateStage.applied);
+        when(candidates.findById(c.getId())).thenReturn(Optional.of(c));
+        when(candidates.save(any(Candidate.class))).thenAnswer(i -> i.getArgument(0));
+
+        Candidate result = service.advanceStage(c.getId(), alice, false);
+
+        assertThat(result.getStage()).isEqualTo(CandidateStage.screening);
+    }
+
+    @Test
+    void advanceStage_atLastStage_doesNotChangeOrSave() {
+        Candidate c = candidate(alice, jobA, "Ada");
+        c.setStage(CandidateStage.rejected); // last in the enum
+        when(candidates.findById(c.getId())).thenReturn(Optional.of(c));
+
+        Candidate result = service.advanceStage(c.getId(), alice, false);
+
+        assertThat(result.getStage()).isEqualTo(CandidateStage.rejected);
+        verify(candidates, never()).save(any());
+    }
+
+    @Test
+    void retreatStage_movesToPreviousStage() {
+        Candidate c = candidate(alice, jobA, "Ada");
+        c.setStage(CandidateStage.interview);
+        when(candidates.findById(c.getId())).thenReturn(Optional.of(c));
+        when(candidates.save(any(Candidate.class))).thenAnswer(i -> i.getArgument(0));
+
+        Candidate result = service.retreatStage(c.getId(), alice, false);
+
+        assertThat(result.getStage()).isEqualTo(CandidateStage.screening);
+    }
+
+    @Test
+    void retreatStage_atFirstStage_doesNotChangeOrSave() {
+        Candidate c = candidate(alice, jobA, "Ada");
+        c.setStage(CandidateStage.applied); // first in the enum
+        when(candidates.findById(c.getId())).thenReturn(Optional.of(c));
+
+        Candidate result = service.retreatStage(c.getId(), alice, false);
+
+        assertThat(result.getStage()).isEqualTo(CandidateStage.applied);
+        verify(candidates, never()).save(any());
+    }
+
+    @Test
+    void advanceStage_othersCandidate_throws() {
+        Candidate c = candidate(bob, jobA, "Bob's Candidate");
+        when(candidates.findById(c.getId())).thenReturn(Optional.of(c));
+        assertThatThrownBy(() -> service.advanceStage(c.getId(), alice, false))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

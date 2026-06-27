@@ -13,7 +13,7 @@
     <h2>Create account</h2>
 
     <div class="card">
-        <p th:if="${param.created}" class="ok" style="color:#15803d;">Account created successfully.</p>
+        <p th:if="${param.created}" class="ok">Account created successfully.</p>
         <p th:if="${error}" class="field-error" th:text="${error}">error</p>
 
         <form th:action="@{/admin/users}" th:object="${form}" method="post">

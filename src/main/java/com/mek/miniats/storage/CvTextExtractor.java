@@ -17,7 +17,11 @@ public class CvTextExtractor {
         }
         if (filename != null && filename.toLowerCase().endsWith(".pdf")) {
             try (PDDocument document = Loader.loadPDF(bytes)) {
-                return new PDFTextStripper().getText(document);
+                PDFTextStripper stripper = new PDFTextStripper();
+                // Order text by on-page position instead of PDF content-stream order;
+                // this fixes most of the jumbling on multi-column CV layouts.
+                stripper.setSortByPosition(true);
+                return stripper.getText(document);
             } catch (Exception e) {
                 return ""; // unreadable PDF — fall back to empty, screening can still be pasted
             }
