@@ -1,0 +1,21 @@
+# Render Blueprint (optional). You can also create the service from the dashboard.
+# Secrets are marked sync:false — set their values in the Render dashboard, never in git.
+services:
+  - type: web
+    name: mini-ats
+    runtime: docker
+    plan: free
+    branch: dev
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: SUPABASE_JWKS_URL
+        sync: false
+      - key: SUPABASE_DB_PASSWORD
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
