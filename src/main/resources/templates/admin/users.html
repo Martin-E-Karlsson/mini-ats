@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mini-ATS · Users</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/nav :: topbar}"></header>
+
+<main class="container">
+    <h2>Users</h2>
+
+    <div class="card">
+        <table>
+            <thead>
+            <tr><th>Email</th><th>Name</th><th>Role</th><th></th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="u : ${users}">
+                <td th:text="${u.email}">email</td>
+                <td th:text="${u.fullName}">name</td>
+                <td><span class="pill" th:text="${u.role}">role</span></td>
+                <td class="actions">
+                    <a class="btn small secondary" th:href="@{/admin/users/{id}/edit(id=${u.id})}">Edit</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>
+        <a class="btn" th:href="@{/admin/users/new}">+ Create account</a>
+    </p>
+</main>
+</body>
+</html>

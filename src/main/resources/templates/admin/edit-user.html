@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mini-ATS · Edit user</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/nav :: topbar}"></header>
+
+<main class="container">
+    <h2>Edit user</h2>
+
+    <div class="card">
+        <p th:if="${error}" class="field-error" th:text="${error}">error</p>
+
+        <form th:action="@{/admin/users/{id}(id=${userId})}" th:object="${form}" method="post">
+            <div class="form-row">
+                <label for="fullName">Full name *</label>
+                <input id="fullName" type="text" th:field="*{fullName}" required>
+                <div class="field-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}">err</div>
+            </div>
+
+            <div class="form-row">
+                <label for="email">Email *</label>
+                <input id="email" type="email" th:field="*{email}" required>
+                <div class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">err</div>
+            </div>
+
+            <div class="form-row">
+                <label for="role">Role *</label>
+                <!-- An admin can't change their own role, so it's read-only when editing self. -->
+                <select id="role" th:field="*{role}" th:disabled="${editingSelf}">
+                    <option th:each="r : ${roles}" th:value="${r}" th:text="${r}">role</option>
+                </select>
+                <!-- Disabled selects don't submit; resend the role so @NotNull passes (controller ignores it for self). -->
+                <input th:if="${editingSelf}" type="hidden" name="role" th:value="${form.role}">
+                <small th:if="${editingSelf}" class="muted">You can't change your own role.</small>
+            </div>
+
+            <div class="form-row">
+                <label for="newPassword">New password (leave blank to keep current)</label>
+                <input id="newPassword" type="password" th:field="*{newPassword}">
+                <div class="field-error" th:if="${#fields.hasErrors('newPassword')}" th:errors="*{newPassword}">err</div>
+            </div>
+
+            <div class="form-row">
+                <label for="confirmPassword">Confirm new password</label>
+                <input id="confirmPassword" type="password" th:field="*{confirmPassword}">
+                <div class="field-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}">err</div>
+            </div>
+
+            <div class="actions">
+                <button class="btn" type="submit">Save</button>
+                <a class="btn secondary" th:href="@{/admin/users}">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card" th:unless="${editingSelf}">
+        <form th:action="@{/admin/users/{id}/delete(id=${userId})}" method="post"
+              onsubmit="return confirm('Delete this account permanently?');">
+            <button class="btn danger" type="submit">Delete account</button>
+        </form>
+    </div>
+</main>
+</body>
+</html>

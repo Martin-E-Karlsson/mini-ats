@@ -113,4 +113,20 @@ public class CandidateController {
         service.moveToStage(id, stage, position, me.id(), CurrentUser.isAdmin(auth));
         return ResponseEntity.noContent().build();
     }
+
+    /** Board button: advance the candidate one stage forward. */
+    @PostMapping("/{id}/advance")
+    public String advance(@PathVariable UUID id,
+                          @AuthenticationPrincipal SupabasePrincipal me, Authentication auth) {
+        service.advanceStage(id, me.id(), CurrentUser.isAdmin(auth));
+        return "redirect:/board";
+    }
+
+    /** Board button: move the candidate one stage back. */
+    @PostMapping("/{id}/back")
+    public String back(@PathVariable UUID id,
+                       @AuthenticationPrincipal SupabasePrincipal me, Authentication auth) {
+        service.retreatStage(id, me.id(), CurrentUser.isAdmin(auth));
+        return "redirect:/board";
+    }
 }

@@ -4,33 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mini-ATS · Sign in</title>
-    <style>
-        body { font-family: system-ui, sans-serif; background: #f4f5f7; display: grid;
-               place-items: center; min-height: 100vh; margin: 0; }
-        .card { background: #fff; padding: 2rem; border-radius: 12px; width: 320px;
-                box-shadow: 0 6px 24px rgba(0,0,0,.08); }
-        h1 { margin: 0 0 1rem; font-size: 1.4rem; }
-        label { display: block; margin: .75rem 0 .25rem; font-size: .85rem; color: #444; }
-        input { width: 100%; padding: .55rem; border: 1px solid #ccc; border-radius: 6px;
-                box-sizing: border-box; }
-        button { margin-top: 1.25rem; width: 100%; padding: .6rem; border: 0; border-radius: 6px;
-                 background: #2563eb; color: #fff; font-weight: 600; cursor: pointer; }
-        .error { color: #b91c1c; font-size: .85rem; margin: .5rem 0; }
-        .ok { color: #15803d; font-size: .85rem; margin: .5rem 0; }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-<main class="card">
-    <h1>Mini-ATS</h1>
-    <p th:if="${param.error}" class="error">Invalid email or password.</p>
-    <p th:if="${param.logout}" class="ok">You have been signed out.</p>
-    <form th:action="@{/user/login}" method="post">
-        <label for="email">Email</label>
-        <input id="email" type="email" name="email" required autofocus>
-        <label for="password">Password</label>
-        <input id="password" type="password" name="password" required>
-        <button type="submit">Sign in</button>
-    </form>
-</main>
+<div class="auth-wrap">
+    <main class="card auth-card">
+        <h1>Mini-ATS</h1>
+        <p class="sub">Sign in to your account</p>
+
+        <p th:if="${param.error}" class="field-error">Invalid email or password.</p>
+        <p th:if="${param.logout}" class="ok">You have been signed out.</p>
+
+        <form th:action="@{/user/login}" method="post">
+            <div class="form-row">
+                <label for="email">Email</label>
+                <input id="email" type="email" name="email" required autofocus>
+            </div>
+            <div class="form-row">
+                <label for="password">Password</label>
+                <input id="password" type="password" name="password" required>
+            </div>
+            <button class="btn" type="submit" style="width:100%;">Sign in</button>
+        </form>
+    </main>
+</div>
 </body>
 </html>

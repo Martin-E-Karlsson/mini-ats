@@ -11,20 +11,9 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
 </head>
 <body>
-<header class="topbar">
-    <nav>
-        <a th:href="@{/jobs}">Jobs</a>
-        <a th:href="@{/board}">Board</a>
-    </nav>
-    <div class="right">
-        <span sec:authentication="name">user</span>
-        <form th:action="@{/user/logout}" method="post">
-            <button class="btn small secondary" type="submit">Sign out</button>
-        </form>
-    </div>
-</header>
+<header th:replace="~{fragments/nav :: topbar}"></header>
 
-<main class="container" style="max-width: 1200px;">
+<main class="container board-page">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <h2 style="margin:0;">Candidate board</h2>
         <a class="btn" th:href="@{/candidates/new}">+ New candidate</a>
@@ -61,6 +50,16 @@
                         <a th:if="${c.linkedinUrl != null and !c.linkedinUrl.isBlank()}"
                            th:href="${c.linkedinUrl}" target="_blank" rel="noopener">LinkedIn</a>
                         <a th:href="@{/candidates/{id}/edit(id=${c.id})}">Edit</a>
+                        <a th:href="@{/candidates/{id}/screen(id=${c.id})}">Screen</a>
+                    </div>
+                    <!-- Reliable alternative to dragging: step the candidate through stages. -->
+                    <div class="move">
+                        <form th:action="@{/candidates/{id}/back(id=${c.id})}" method="post">
+                            <button class="btn small secondary" type="submit" title="Move back">◀</button>
+                        </form>
+                        <form th:action="@{/candidates/{id}/advance(id=${c.id})}" method="post">
+                            <button class="btn small secondary" type="submit" title="Advance">▶</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -78,6 +77,10 @@
             new Sortable(col, {
                 group: 'board',
                 animation: 150,
+                ghostClass: 'kcard-ghost',
+                // Don't start a drag when clicking the links/buttons on a card.
+                filter: 'a, button',
+                preventOnFilter: false,
                 onEnd: function (evt) {
                     const id = evt.item.dataset.id;
                     const stage = evt.to.dataset.stage;       // target column's stage

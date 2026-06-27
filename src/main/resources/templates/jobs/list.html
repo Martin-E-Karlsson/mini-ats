@@ -8,18 +8,7 @@
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-<header class="topbar">
-    <nav>
-        <a th:href="@{/jobs}">Jobs</a>
-        <a th:href="@{/board}">Board</a>
-    </nav>
-    <div class="right">
-        <span sec:authentication="name">user</span>
-        <form th:action="@{/user/logout}" method="post">
-            <button class="btn small secondary" type="submit">Sign out</button>
-        </form>
-    </div>
-</header>
+<header th:replace="~{fragments/nav :: topbar}"></header>
 
 <main class="container">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">

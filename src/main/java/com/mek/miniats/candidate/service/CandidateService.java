@@ -63,6 +63,14 @@ public class CandidateService {
         return candidates.save(c);
     }
 
+    /** Attach an uploaded CV (storage key + original filename) to a candidate. */
+    public Candidate attachCv(UUID id, String cvKey, String filename, UUID userId, boolean isAdmin) {
+        Candidate c = get(id, userId, isAdmin);
+        c.setCvPath(cvKey);
+        c.setCvFilename(filename);
+        return candidates.save(c);
+    }
+
     /** Kanban drag-and-drop: move a candidate to a new column and ordering slot. */
     public Candidate moveToStage(UUID id, CandidateStage stage, double position,
                                  UUID userId, boolean isAdmin) {
@@ -70,6 +78,28 @@ public class CandidateService {
         c.setStage(stage);
         c.setPosition(position);
         return candidates.save(c);
+    }
+
+    /** Move a candidate one stage forward (clamped at the last stage). */
+    public Candidate advanceStage(UUID id, UUID userId, boolean isAdmin) {
+        return shiftStage(id, userId, isAdmin, +1);
+    }
+
+    /** Move a candidate one stage back (clamped at the first stage). */
+    public Candidate retreatStage(UUID id, UUID userId, boolean isAdmin) {
+        return shiftStage(id, userId, isAdmin, -1);
+    }
+
+    private Candidate shiftStage(UUID id, UUID userId, boolean isAdmin, int delta) {
+        Candidate c = get(id, userId, isAdmin);
+        CandidateStage[] stages = CandidateStage.values();
+        int next = c.getStage().ordinal() + delta;
+        if (next >= 0 && next < stages.length) {
+            c.setStage(stages[next]);
+            c.setPosition(0); // place at the top of the new column
+            return candidates.save(c);
+        }
+        return c; // already at an end — no change
     }
 
     public void delete(UUID id, UUID userId, boolean isAdmin) {

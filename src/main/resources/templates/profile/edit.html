@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mini-ATS · My profile</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/nav :: topbar}"></header>
+
+<main class="container">
+    <h2>My profile</h2>
+
+    <div class="card">
+        <p th:if="${param.updated}" class="ok">Profile updated.</p>
+        <p th:if="${error}" class="field-error" th:text="${error}">error</p>
+
+        <p class="muted">Role: <span class="pill" th:text="${role}">role</span></p>
+
+        <form th:action="@{/profile}" th:object="${form}" method="post">
+            <div class="form-row">
+                <label for="fullName">Full name *</label>
+                <input id="fullName" type="text" th:field="*{fullName}" required>
+                <div class="field-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}">err</div>
+            </div>
+
+            <div class="form-row">
+                <label for="email">Email *</label>
+                <input id="email" type="email" th:field="*{email}" required>
+                <div class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">err</div>
+            </div>
+
+            <div class="form-row">
+                <label for="newPassword">New password (leave blank to keep current)</label>
+                <input id="newPassword" type="password" th:field="*{newPassword}">
+                <div class="field-error" th:if="${#fields.hasErrors('newPassword')}" th:errors="*{newPassword}">err</div>
+            </div>
+
+            <div class="form-row">
+                <label for="confirmPassword">Confirm new password</label>
+                <input id="confirmPassword" type="password" th:field="*{confirmPassword}">
+                <div class="field-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}">err</div>
+            </div>
+
+            <div class="actions">
+                <button class="btn" type="submit">Save</button>
+                <a class="btn secondary" th:href="@{/board}">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>

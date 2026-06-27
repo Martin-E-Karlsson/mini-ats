@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mini-ATS · Create account</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/nav :: topbar}"></header>
+
+<main class="container">
+    <h2>Create account</h2>
+
+    <div class="card">
+        <p th:if="${param.created}" class="ok">Account created successfully.</p>
+        <p th:if="${error}" class="field-error" th:text="${error}">error</p>
+
+        <form th:action="@{/admin/users}" th:object="${form}" method="post">
+            <div class="form-row">
+                <label for="fullName">Full name *</label>
+                <input id="fullName" type="text" th:field="*{fullName}" required>
+                <div class="field-error" th:if="${#fields.hasErrors('fullName')}"
+                     th:errors="*{fullName}">Name error</div>
+            </div>
+
+            <div class="form-row">
+                <label for="email">Email *</label>
+                <input id="email" type="email" th:field="*{email}" required>
+                <div class="field-error" th:if="${#fields.hasErrors('email')}"
+                     th:errors="*{email}">Email error</div>
+            </div>
+
+            <div class="form-row">
+                <label for="password">Temporary password * (min 8 characters)</label>
+                <input id="password" type="password" th:field="*{password}" required>
+                <div class="field-error" th:if="${#fields.hasErrors('password')}"
+                     th:errors="*{password}">Password error</div>
+            </div>
+
+            <div class="form-row">
+                <label for="confirmPassword">Confirm password *</label>
+                <input id="confirmPassword" type="password" th:field="*{confirmPassword}" required>
+                <div class="field-error" th:if="${#fields.hasErrors('confirmPassword')}"
+                     th:errors="*{confirmPassword}">Confirm error</div>
+            </div>
+
+            <div class="form-row">
+                <label for="role">Role *</label>
+                <select id="role" th:field="*{role}">
+                    <option th:each="r : ${roles}" th:value="${r}" th:text="${r}">role</option>
+                </select>
+            </div>
+
+            <div class="actions">
+                <button class="btn" type="submit">Create account</button>
+                <a class="btn secondary" th:href="@{/board}">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>

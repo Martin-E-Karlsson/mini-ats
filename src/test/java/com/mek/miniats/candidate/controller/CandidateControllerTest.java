@@ -100,4 +100,22 @@ class CandidateControllerTest {
                         .param("stage", "interview"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void advance_movesStageAndRedirectsToBoard() throws Exception {
+        UUID id = UUID.randomUUID();
+        mvc.perform(post("/candidates/{id}/advance", id).with(signedIn("ROLE_CUSTOMER")).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/board"));
+        verify(candidateService).advanceStage(id, userId, false);
+    }
+
+    @Test
+    void back_movesStageAndRedirectsToBoard() throws Exception {
+        UUID id = UUID.randomUUID();
+        mvc.perform(post("/candidates/{id}/back", id).with(signedIn("ROLE_CUSTOMER")).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/board"));
+        verify(candidateService).retreatStage(id, userId, false);
+    }
 }
